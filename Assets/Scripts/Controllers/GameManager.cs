@@ -136,4 +136,10 @@ public class GameManager : MonoBehaviour
             m_levelCondition = null;
         }
     }
+
+    public void RestartLevel()
+    {
+        ClearLevel();
+        LoadLevel(m_levelCondition is LevelMoves ? eLevelMode.MOVES : eLevelMode.TIMER);
+    }
 }

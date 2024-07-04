@@ -10,16 +10,30 @@ public class UIPanelGame : MonoBehaviour,IMenu
 
     [SerializeField] private Button btnPause;
 
+    [SerializeField] private Button btnRestartLevel;
+
     private UIMainManager m_mngr;
 
     private void Awake()
     {
         btnPause.onClick.AddListener(OnClickPause);
+        btnRestartLevel.onClick.AddListener(OnClickRestart);
+    }
+
+    void OnDestroy()
+    {
+        if (btnPause) btnPause.onClick.RemoveAllListeners();
+        if (btnRestartLevel) btnRestartLevel.onClick.RemoveAllListeners();
     }
 
     private void OnClickPause()
     {
         m_mngr.ShowPauseMenu();
+    }
+
+    private void OnClickRestart()
+    {
+        m_mngr.RestartLevel();
     }
 
     public void Setup(UIMainManager mngr)

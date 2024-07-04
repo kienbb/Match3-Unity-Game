@@ -42,12 +42,12 @@ public class Board
     private void CreateBoard()
     {
         Vector3 origin = new Vector3(-boardSizeX * 0.5f + 0.5f, -boardSizeY * 0.5f + 0.5f, 0f);
-        GameObject prefabBG = Resources.Load<GameObject>(Constants.PREFAB_CELL_BACKGROUND);
+        GameObject prefabBG = ResourcesManager.Load<GameObject>(Constants.PREFAB_CELL_BACKGROUND);
         for (int x = 0; x < boardSizeX; x++)
         {
             for (int y = 0; y < boardSizeY; y++)
             {
-                GameObject go = GameObject.Instantiate(prefabBG);
+                GameObject go = ObjectPoolManager.Spawn(prefabBG);
                 go.transform.position = origin + new Vector3(x, y, 0f);
                 go.transform.SetParent(m_root);
 
@@ -147,12 +147,61 @@ public class Board
 
                 NormalItem item = new NormalItem();
 
-                item.SetType(Utils.GetRandomNormalType());
+                //item.SetType(Utils.GetRandomNormalType());
+                item.SetType(GetDesireType(cell));
                 item.SetView();
                 item.SetViewRoot(m_root);
 
                 cell.Assign(item);
                 cell.ApplyItemPosition(true);
+            }
+        }
+    }
+
+    private NormalItem.eNormalType GetDesireType(Cell cell)
+    {
+        ///lấy ra danh sách các type xuất hiện ít nhất theo thứ tự tăng dần
+        Dictionary<NormalItem.eNormalType, int> dict = new Dictionary<NormalItem.eNormalType, int>();
+        for (int x = 0; x < boardSizeX; x++)
+        {
+            for (int y = 0; y < boardSizeY; y++)
+            {
+                Cell aCell = m_cells[x, y];
+                if (aCell.IsEmpty) continue;
+
+                NormalItem item = aCell.Item as NormalItem;
+                if (item == null) continue;
+
+                if (dict.ContainsKey(item.ItemType))
+                {
+                    dict[item.ItemType]++;
+                }
+                else
+                {
+                    dict.Add(item.ItemType, 1);
+                }
+            }
+        }
+        List<NormalItem.eNormalType> leastTypes = dict.OrderBy(x => x.Value).Select(x => x.Key).ToList();
+
+        ///bỏ đi các type đã xuất hiện xung quanh
+        if(cell.NeighbourUp != null && !cell.NeighbourUp.IsEmpty && cell.NeighbourUp.Item is NormalItem)
+            RemoveType((cell.NeighbourUp.Item as NormalItem).ItemType);
+        if (cell.NeighbourRight != null && !cell.NeighbourRight.IsEmpty && cell.NeighbourRight.Item is NormalItem)
+            RemoveType((cell.NeighbourRight.Item as NormalItem).ItemType);
+        if (cell.NeighbourBottom != null && !cell.NeighbourBottom.IsEmpty && cell.NeighbourBottom.Item is NormalItem)
+            RemoveType((cell.NeighbourBottom.Item as NormalItem).ItemType);
+        if (cell.NeighbourLeft != null && !cell.NeighbourLeft.IsEmpty && cell.NeighbourLeft.Item is NormalItem)
+            RemoveType((cell.NeighbourLeft.Item as NormalItem).ItemType);
+
+        ///trả về type ít xuất hiện nhất
+        return leastTypes[0];
+
+        void RemoveType(NormalItem.eNormalType type)
+        {
+            if (leastTypes.Contains(type))
+            {
+                leastTypes.Remove(type);
             }
         }
     }
@@ -350,7 +399,7 @@ public class Board
         var dir = GetMatchDirection(matches);
 
         var bonus = matches.Where(x => x.Item is BonusItem).FirstOrDefault();
-        if(bonus == null)
+        if (bonus == null)
         {
             return matches;
         }
@@ -669,7 +718,7 @@ public class Board
                 Cell cell = m_cells[x, y];
                 cell.Clear();
 
-                GameObject.Destroy(cell.gameObject);
+                ObjectPoolManager.Unspawn(cell.gameObject);
                 m_cells[x, y] = null;
             }
         }

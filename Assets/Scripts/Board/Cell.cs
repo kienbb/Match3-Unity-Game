@@ -78,16 +78,16 @@ public class Cell : MonoBehaviour
 
     internal void AnimateItemForHint()
     {
-        Item.AnimateForHint();
+        Item?.AnimateForHint();
     }
 
     internal void StopHintAnimation()
     {
-        Item.StopAnimateForHint();
+        Item?.StopAnimateForHint();
     }
 
     internal void ApplyItemMoveToPosition()
     {
-        Item.AnimationMoveToPosition();
+        Item?.AnimationMoveToPosition();
     }
 }
